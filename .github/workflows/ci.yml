@@ -13,6 +13,14 @@ jobs:
       matrix:
         node-version: [18.x]
 
+<<<<<<< HEAD
+=======
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontned
+>>>>>>> 792363a15172e8a982d66459655aee777131552b
     steps:
       - uses: actions/checkout@v3
 
