@@ -21,37 +21,39 @@ jobs:
         node-version: [18.x]
 
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Use Node.js ${{ matrix.node-version }}
+      - uses: actions/checkout@v3      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'      - name: Install Backend Dependencies
-        working-directory: ./backend
-        run: npm ci
+          cache: 'npm'
 
-      - name: Setup Backend Environment
-        working-directory: ./backend
+      - name: Install Backend Dependencies
         run: |
+          cd backend
+          npm ci      - name: Setup Backend Environment
+        run: |
+          cd backend
           echo "MONGODB_URI=mongodb://localhost:27017/test" > .env
           echo "JWT_SECRET=test-secret" >> .env
           echo "NODE_ENV=test" >> .env
 
       - name: Run Backend Tests
-        working-directory: ./backend
-        run: npm run test:ci
+        run: |
+          cd backend
+          npm run test:ci
         env:
           CI: true
           NODE_ENV: test
 
       - name: Install Frontend Dependencies
-        working-directory: ./frontend
-        run: npm ci
+        run: |
+          cd frontend
+          npm ci
 
       - name: Run Frontend Tests
-        working-directory: ./frontend
-        run: npm run test:ci
+        run: |
+          cd frontend
+          npm run test:ci
         env:
           CI: true
 
