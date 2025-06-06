@@ -7,34 +7,36 @@ on:
     branches: [main]
 
 jobs:
-  backend:
+  test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - name: Install dependencies
-        run: npm install
-      - name: Run backend tests
-        run: npm test
+    strategy:
+      matrix:
+        node-version: [18.x]
 
-  frontend:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./fontend
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Node.js
+
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
-          node-version: 18
-      - name: Install dependencies
-        run: npm install
-      - name: Run frontend tests
-        run: npm test
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Backend Tests
+        run: |
+          cd backend
+          npm ci
+          npm run test:ci
+
+      - name: Frontend Tests
+        run: |
+          cd frontend
+          npm ci
+          npm run test:ci
+
+      - name: Upload Coverage Reports
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./backend/coverage/lcov.info,./frontend/coverage/lcov.info
+          flags: backend,frontend
