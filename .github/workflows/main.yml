@@ -34,13 +34,13 @@ jobs:
       # Step 4: Install frontend dependencies
       - name: Install frontend dependencies
         run: |
-          cd frontend
+          cd frontned
           npm install
 
       # Step 5: Build frontend
       - name: Build frontend
         run: |
-          cd frontend
+          cd frontned
           npm run build
 
       # Optional: Step 6 - Run backend tests (if you have any)
