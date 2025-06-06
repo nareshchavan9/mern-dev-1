@@ -5,6 +5,8 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   test:
@@ -32,62 +34,46 @@ jobs:
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
-
-      # Cache backend dependencies
-      - name: Cache Backend Dependencies
-        uses: actions/cache@v3
-        with:
-          path: backend/node_modules
-          key: ${{ runner.os }}-npm-backend-${{ hashFiles('backend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-backend-
-
-      # Cache frontend dependencies
-      - name: Cache Frontend Dependencies
-        uses: actions/cache@v3
-        with:
-          path: frontend/node_modules
-          key: ${{ runner.os }}-npm-frontend-${{ hashFiles('frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-frontend-
-
-      - name: Install Backend Dependencies
+          node-version: ${{ matrix.node-version }}      - name: Backend - Setup & Test
         run: |
           cd backend
           npm ci
-
-      - name: Setup Backend Environment
-        run: |
-          cd backend
           echo "MONGODB_URI=mongodb://localhost:27017/test" > .env
           echo "JWT_SECRET=test-secret" >> .env
-          echo "NODE_ENV=test" >> .env      - name: Run Backend Tests
-        run: |
-          cd backend
+          echo "NODE_ENV=test" >> .env
           npm run test:ci
         env:
           CI: true
           NODE_ENV: test
+          FORCE_COLOR: true
+        timeout-minutes: 5
 
-      - name: Install Frontend Dependencies
+      - name: Frontend - Setup & Test
         run: |
           cd frontend
           npm ci
-
-      - name: Run Frontend Tests
-        run: |
-          cd frontend
           npm run test:ci
         env:
           CI: true
+          FORCE_COLOR: true
+        timeout-minutes: 5
 
       - name: Upload Coverage Reports
         uses: codecov/codecov-action@v3
-        if: success()
+        if: always()  # Upload coverage even if tests fail
         with:
           files: |
             ./backend/coverage/lcov.info
             ./frontend/coverage/lcov.info
           flags: unittests
           fail_ci_if_error: true
+
+      - name: Archive test results
+        if: always()  # Archive results even if tests fail
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            ./backend/coverage/
+            ./frontend/coverage/
+          retention-days: 30
