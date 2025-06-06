@@ -62,12 +62,10 @@ jobs:
           cd backend
           echo "MONGODB_URI=mongodb://localhost:27017/test" > .env
           echo "JWT_SECRET=test-secret" >> .env
-          echo "NODE_ENV=test" >> .env
-
-      - name: Run Backend Tests
+          echo "NODE_ENV=test" >> .env      - name: Run Backend Tests
         run: |
           cd backend
-          npm run test
+          npm run test:ci
         env:
           CI: true
           NODE_ENV: test
@@ -80,7 +78,7 @@ jobs:
       - name: Run Frontend Tests
         run: |
           cd frontend
-          npm run test
+          npm run test:ci
         env:
           CI: true
 
