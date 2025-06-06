@@ -27,45 +27,40 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/checkout@v3      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
 
-      - name: Install Backend Dependencies
-        run: |
-          cd backend
-          npm ci
+      - name: Cache Backend Dependencies
+        uses: actions/cache@v3
+        with:
+          path: backend/node_modules
+          key: ${{ runner.os }}-npm-backend-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-backend-
 
+      - name: Cache Frontend Dependencies
+        uses: actions/cache@v3
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-npm-frontend-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-frontend-      - name: Install Dependencies
+        run: npm ci
+        
       - name: Setup Backend Environment
         run: |
           cd backend
           echo "MONGODB_URI=mongodb://localhost:27017/test" > .env
           echo "JWT_SECRET=test-secret" >> .env
           echo "NODE_ENV=test" >> .env
-
-      - name: Run Backend Tests
-        run: |
-          cd backend
-          npm run test:ci
+        
+      - name: Run Tests
+        run: npm run test
         env:
           CI: true
           NODE_ENV: test
-
-      - name: Install Frontend Dependencies
-        run: |
-          cd frontend
-          npm ci
-
-      - name: Run Frontend Tests
-        run: |
-          cd frontend
-          npm run test:ci
-        env:
-          CI: true
 
       - name: Upload Coverage Reports
         uses: codecov/codecov-action@v3
