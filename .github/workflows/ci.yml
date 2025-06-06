@@ -2,25 +2,24 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
     strategy:
       matrix:
         node-version: [18.x]
 
-<<<<<<< HEAD
-=======
-  frontend:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontned
->>>>>>> 792363a15172e8a982d66459655aee777131552b
     steps:
       - uses: actions/checkout@v3
 
@@ -28,23 +27,40 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: 'npm'      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
 
-      - name: Backend Tests
+      - name: Setup Backend Environment
+        working-directory: ./backend
         run: |
-          cd backend
-          npm ci
-          npm run test:ci
+          echo "MONGODB_URI=mongodb://localhost:27017/test" > .env
+          echo "JWT_SECRET=test-secret" >> .env
+          echo "NODE_ENV=test" >> .env
 
-      - name: Frontend Tests
-        run: |
-          cd frontend
-          npm ci
-          npm run test:ci
+      - name: Run Backend Tests
+        working-directory: ./backend
+        run: npm run test:ci
+        env:
+          CI: true
+          NODE_ENV: test
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: npm run test:ci
+        env:
+          CI: true
 
       - name: Upload Coverage Reports
         uses: codecov/codecov-action@v3
+        if: success()
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./backend/coverage/lcov.info,./frontend/coverage/lcov.info
-          flags: backend,frontend
+          files: |
+            ./backend/coverage/lcov.info
+            ./frontend/coverage/lcov.info
+          flags: unittests
+          fail_ci_if_error: true

@@ -1,11 +1,13 @@
 module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/__tests__/**/*.js', '**/*.test.js'],
+  setupFiles: ['<rootDir>/tests/setup.js'],
   collectCoverageFrom: [
     '**/*.{js,jsx}',
     '!**/node_modules/**',
     '!**/coverage/**',
-    '!jest.config.js'
+    '!jest.config.js',
+    '!seed.js'
   ],
   coverageDirectory: 'coverage',
   verbose: true,
